@@ -39,51 +39,6 @@ def residual_block(x):
     res = Add()([res, x])
     return res
 
-def build_generator():
-    """
-    Create a generator network using the hyperparameter values defined below
-    :return:
-    """
-    residual_blocks = 16
-    momentum = 0.8
-    input_shape = (64, 64, 3)
-
-    # Input Layer of the generator network
-    input_layer = Input(shape=input_shape)
-
-    # Add the pre-residual block
-    gen1 = Conv2D(filters=64, kernel_size=9, strides=1, padding='same', activation='relu')(input_layer)
-
-    # Add 16 residual blocks
-    res = residual_block(gen1)
-    for i in range(residual_blocks - 1):
-        res = residual_block(res)
-
-    # Add the post-residual block
-    gen2 = Conv2D(filters=64, kernel_size=3, strides=1, padding='same')(res)
-    gen2 = BatchNormalization(momentum=momentum)(gen2)
-
-    # Take the sum of the output from the pre-residual block(gen1) and the post-residual block(gen2)
-    gen3 = Add()([gen2, gen1])
-
-    # Add an upsampling block
-    gen4 = UpSampling2D(size=2)(gen3)
-    gen4 = Conv2D(filters=256, kernel_size=3, strides=1, padding='same')(gen4)
-    gen4 = Activation('relu')(gen4)
-
-    # Add another upsampling block
-    gen5 = UpSampling2D(size=2)(gen4)
-    gen5 = Conv2D(filters=256, kernel_size=3, strides=1, padding='same')(gen5)
-    gen5 = Activation('relu')(gen5)
-
-    # Output convolution layer
-    gen6 = Conv2D(filters=3, kernel_size=9, strides=1, padding='same')(gen5)
-    output = Activation('tanh')(gen6)
-
-    # Keras model
-    model = Model(inputs=[input_layer], outputs=[output], name='generator')
-    return model
-
 
 def input_pipeline(data_path, batch_size, highres_shape, lowres_shape):
     all_images = glob.glob(data_path + "*")
@@ -161,3 +116,93 @@ def save_images(data_path, lowres, highres, orig):
     plt.savefig(data_path)
 
     # plt.imsave(data_path , tot_img)
+
+
+def just_train(training_images_path,high_resolution_shape,low_resolution_shape, epochs, generator, discriminator, vgg, adversarial_model, writer, batch_size, res_im_path, models_path):
+    dataloader = iter(input_pipeline(training_images_path, 1, high_resolution_shape[:2], low_resolution_shape[:2]))
+    # Build and compile VGG19 network to extract features
+
+    for epoch in range(epochs):
+
+        """
+        Train the discriminator network
+        """
+
+        # Sample a batch of images
+        # high_resolution_images, low_resolution_images = next(highres_dataloader) , next(lowres_dataloader)
+        high_resolution_images, low_resolution_images = next(dataloader)
+
+        # Generate high-resolution images from low-resolution images
+        generated_high_resolution_images = generator.predict(low_resolution_images)
+
+        # Generate batch of real and fake labels
+        real_labels = np.ones((batch_size, 16, 16, 1))
+        fake_labels = np.zeros((batch_size, 16, 16, 1))
+
+        # Train the discriminator network on real and fake images
+        d_loss_real = discriminator.train_on_batch(high_resolution_images, real_labels)
+        d_loss_fake = discriminator.train_on_batch(generated_high_resolution_images, fake_labels)
+
+        # Calculate total discriminator loss
+        d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
+
+        # print("d_loss:", d_loss)
+
+        """
+        Train the generator network
+        """
+
+        # Sample a batch of images
+
+        # high_resolution_images, low_resolution_images = sample_images(batch_size)
+        # high_resolution_images, low_resolution_images = next(highres_dataloader) , next(lowres_dataloader)
+        high_resolution_images, low_resolution_images = next(dataloader)
+
+        # Extract feature maps for real high-resolution images
+        image_features = vgg.predict(high_resolution_images)
+
+        # Train the generator network
+        g_loss = adversarial_model.train_on_batch([low_resolution_images, high_resolution_images],
+                                                  [real_labels, image_features])
+
+        # print("g_loss:", g_loss)
+
+        print("Epoch {} : g_loss: {} , d_loss: {}".format(epoch, g_loss[0], d_loss[0]))
+
+        # Write the losses to Tensorboard
+        # write_log(tensorboard, 'g_loss', g_loss[0], epoch)
+        # write_log(tensorboard, 'd_loss', d_loss[0], epoch)
+
+        # Sample and save images after every 100 epochs
+
+        with writer.as_default():
+            tf.summary.scalar('g_loss', g_loss[0], step=epoch)
+            tf.summary.scalar('d_loss', d_loss[0], step=epoch)
+        writer.flush()
+
+        # write_log(tensorboard, 'g_loss', g_loss[0], epoch)
+        # write_log(tensorboard, 'd_loss', d_loss[0], epoch)
+
+        # print("Epoch {}:  Gloss : {} , Dloss {}".format(epoch+1 , g_loss , d_loss))
+        if (epoch) % 100 == 0:
+            # high_resolution_images, low_resolution_images = sample_images(batch_size)
+            # high_resolution_images, low_resolution_images = next(highres_dataloader) , next(lowres_dataloader)
+            high_resolution_images, low_resolution_images = next(dataloader)
+
+            # Normalize images
+            # high_resolution_images = high_resolution_images / 127.5 - 1.
+            # low_resolution_images = low_resolution_images / 127.5 - 1.
+
+            generated_images = generator.predict_on_batch(low_resolution_images)
+
+            for index, img in enumerate(generated_images):
+                save_images(res_im_path + "img_{}_{}".format(epoch, index),
+                            low_resolution_images[index], generated_images[index], high_resolution_images[index]
+                            )
+            # Save models
+            generator.save_weights(models_path + "generator_{}.h5".format(epoch))
+            discriminator.save_weights(models_path + "discriminator_{}.h5".format(epoch))
+
+
+if __name__ == '__main__':
+    pass
