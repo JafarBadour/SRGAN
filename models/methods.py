@@ -17,29 +17,6 @@ import shutil
 import datetime
 
 
-def residual_block(x):
-    """
-    Residual block
-    """
-    filters = [64, 64]
-    kernel_size = 3
-    strides = 1
-    padding = "same"
-    momentum = 0.8
-    activation = "relu"
-
-    res = Conv2D(filters=filters[0], kernel_size=kernel_size, strides=strides, padding=padding)(x)
-    res = Activation(activation=activation)(res)
-    res = BatchNormalization(momentum=momentum)(res)
-
-    res = Conv2D(filters=filters[1], kernel_size=kernel_size, strides=strides, padding=padding)(res)
-    res = BatchNormalization(momentum=momentum)(res)
-
-    # Add res and x
-    res = Add()([res, x])
-    return res
-
-
 def input_pipeline(data_path, batch_size, highres_shape, lowres_shape):
     all_images = glob.glob(data_path + "*")
 

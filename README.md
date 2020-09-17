@@ -25,41 +25,5 @@ of the DIV2K dataset in tensorflow datasets. The document contains related
 work review and results of the draft model along with issues we faced and how we are handling them. 
 The document also contains description of the approach and results.
 
-## Code running
-To run the code, just write the following commands:
-1. ```pip install -r requirements.txt```
-2. Now you can just run the notebook or train the model using train.py.
-
-### Train a model
-To train the model you may run the model with the default parameters without passing any arguments. It will train the model and generate predictions:
-```
-python train.py
-```
-
-For more information about arguments to pass. Refer to the `help` message:
-```
-usage: Script for baseline training. Model is ResNet18 (pretrained on ImageNet). Training takes ~ 15 mins (@ GTX 1080Ti).
-       [-h] [--name NAME] [--data DATA] [--batch-size BATCH_SIZE]
-       [--frames-cnt FRAMES_CNT] [--model-type MODEL_TYPE] [--epochs EPOCHS]
-       [--learning-rate LEARNING_RATE] [--gpu] [--predict]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --name NAME, -n NAME  Experiment name (for saving best models and prediction
-                        results).
-  --data DATA, -d DATA  Path to dir with videos folder and train/test files.
-  --batch-size BATCH_SIZE, -b BATCH_SIZE
-                        Batch size.
-  --frames-cnt FRAMES_CNT, -f FRAMES_CNT
-                        Number of video frames for random selection.
-  --model-type MODEL_TYPE, -m MODEL_TYPE
-                        Model to run. Two options: 'cnn-avg' or 'cnn-rnn'.
-  --epochs EPOCHS, -e EPOCHS
-                        Number of training epochs.
-  --learning-rate LEARNING_RATE, -lr LEARNING_RATE
-                        Learning rate for the optimizer.
-  --gpu                 Whether to run using GPU or not.
-  --predict             Whether to only make predictions or to train a model,
-                        too.
-```
-
+## Script Instructions
+TBA
