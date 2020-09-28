@@ -68,3 +68,4 @@ def save_images(data_path, lowres, highres, orig):
     ax.set_title("Generated")
 
     plt.savefig(data_path)
+    # ended
