@@ -1,6 +1,8 @@
 ## README
 This project was done by Jafar Badour, Hussain Kara Fallah and Almir Mullanurov.
 
+
+
 ## Description of the project
 The goal of Single image super-resolution (SISR) is to recover the lost details from
 a low-resolution (LR) image providing a high-resolution (HR) image.

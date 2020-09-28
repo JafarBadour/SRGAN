@@ -15,6 +15,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 import shutil
 import datetime
+##
 
 def residual_block(x):
     """

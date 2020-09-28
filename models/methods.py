@@ -128,7 +128,7 @@ def just_train(training_images_path,high_resolution_shape,low_resolution_shape, 
         """
         Train the generator network
         """
-
+        ##
         # Sample a batch of images
 
         # high_resolution_images, low_resolution_images = sample_images(batch_size)

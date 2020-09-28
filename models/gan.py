@@ -34,7 +34,7 @@ def build_vgg():
     return model
 
 
-def build_gan():
+def build_gan():##
 
 
 
