@@ -34,15 +34,9 @@ def build_vgg():
     return model
 
 
-def define_adv_model(board_logs_path, logdir, generated_high_resolution_images):
-    logdir = os.path.join(board_logs_path , datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
-    tensorboard = keras.callbacks.TensorBoard(logdir , histogram_freq=1 , profile_batch=0)
-    writer = tf.summary.create_file_writer(logdir)
+def build_gan():
 
-    mode = 'predict'
 
-    epochs = 30001
-    batch_size = 1
 
     common_optimizer = Adam(0.0002, 0.5)
     low_resolution_shape = (64, 64, 3)
@@ -64,20 +58,20 @@ def define_adv_model(board_logs_path, logdir, generated_high_resolution_images):
     """
 
     # Input layers for high-resolution and low-resolution images
-    input_high_resolution = Input(shape=high_resolution_shape)
-    input_low_resolution = Input(shape=low_resolution_shape)
+    hr_input = Input(shape=high_resolution_shape)
+    lr_input = Input(shape=low_resolution_shape)
 
     # Generate high-resolution images from low-resolution images
-    generated_high_resolution_images = generator(input_low_resolution)
+    sr_output = generator(lr_input)
 
     # Extract feature maps of the generated images
-    features = vgg(generated_high_resolution_images)
+    features = vgg(sr_output)
 
     # Get the probability of generated high-resolution images
-    probs = discriminator(generated_high_resolution_images)
+    probs = discriminator(sr_output)
 
     # Create and compile an adversarial model
-    adversarial_model = Model([input_low_resolution, input_high_resolution], [probs, features])
+    adversarial_model = Model([lr_input, hr_input], [probs, features])
     adversarial_model.compile(loss=['binary_crossentropy', 'mse'], loss_weights=[1e-3, 1], optimizer=common_optimizer)
 
-    return adversarial_model
+    return adversarial_model, generator, discriminator
